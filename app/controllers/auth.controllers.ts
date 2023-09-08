@@ -1,57 +1,132 @@
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 import User from "../models/Users";
 
+type UserData = {
+  phoneNumber: string,
+  password: string,
+  name: string,
+  _id: string,
+}
+
 const signUpWithNumber = async (req: Request, res: Response) => {
-  const {
-    email,
-    password,
-    name,
-    cPassword,
-    phoneNumber
-  } = req.body;
-  console.log(req.body)
-  if (!phoneNumber || !name || !password ) {
-    return res.json({
-      status: 400,
-      message: "Invalid Form data!",
+  try {
+    const {
+      email,
+      password,
+      name,
+      cPassword,
+      phoneNumber
+    } = req.body;
+
+    if (!phoneNumber || !name || !password) {
+      return res.json({
+        status: 400,
+        message: "Invalid Form data!",
+      })
+    }
+
+    if (password !== cPassword) {
+      return res.json({
+        status: 400,
+        message: "Password is not equal to confirmed Password"
+      });
+    }
+
+    const users = await User.find({ phoneNumber });
+    if (users.length > 0) {
+      return res.json({
+        status: 304,
+        message: "This Email is in using, Please another Email!"
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = new User({
+      email,
+      password: hashedPassword,
+      name,
+      role: "doctor",
+      phoneNumber
+    })
+
+    await user.save();
+    return res.status(200).json({
+      status: 200,
+      message: "Suceeded in Registration",
+    });
+
+  } catch (err) {
+    console.error(err);
+
+    res.json({
+      status: 500,
+      messag: "Server ERR!"
     })
   }
+}
 
-  if (password !== cPassword) {
-    return res.json({
-      status: 400,
-      message: "Password is not equal to confirmed Password"
-    });
+const signInWithPassword = async (req: Request, res: Response) => {
+  try {
+    const {
+      phoneNumber,
+      password,
+    } = req.body;
+
+    const user = await User.findOne({ phoneNumber });
+
+    if (
+      !user
+      || (await bcrypt.compare(password, user.password))
+    ) {
+
+      return res.json({
+        status: 400,
+        message: "Invalid Credential!",
+        type: "warning",
+      });
+    
+    } else {
+     
+      const token = await generateJWT({
+        phoneNumber: user.phoneNumber,
+        name: user.name,
+        _id: user._id.toString(),
+        password: user.password
+      });
+
+      return res.json({
+        status: 200,
+        data: token,
+      });
+
+    }
+  } catch (error) {
+    console.error(error),
+      res.json({
+        status: 500,
+        message: "Server ERR!"
+      })
   }
+}
 
-  const users = await User.find({ phoneNumber });
-  if (users.length > 0) {
-    return res.json({
-      status: 304,
-      message: "This Email is in using, Please another Email!"
-    });
-  }
-
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  const user = new User({
-    email,
-    password: hashedPassword,
-    name,
-    role: "doctor",
-    phoneNumber
+const generateJWT = async (userData: UserData) => {
+  const token = jwt.sign({
+    phoneNumber: userData.phoneNumber,
+    name: userData.name,
+    password: userData.password,
+  }, process.env.SECRET_KEY!, {
+    expiresIn: "2 days"
   })
 
-  await user.save();
-  return res.status(200).json({
-    status: 200,
-    message: "Suceeded in Registration",
-  });
-
+  return token;
 }
+
 
 export default {
   signUpWithNumber,
+  signInWithPassword,
 }

@@ -10,6 +10,7 @@ export default (app: Application) => {
 
   /** Routes for Authentication */
   router.post("/signUpWithNumber", authControllers.signUpWithNumber)
+  router.post("/signInWithPassword", authControllers.signInWithPassword)
 
   app.use("/", router);
 }
