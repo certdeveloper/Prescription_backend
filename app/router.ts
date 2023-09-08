@@ -1,11 +1,17 @@
 import { Application, Router } from "express";
 
 import HomeController from "./controllers/home";
+import authControllers from "./controllers/auth.controllers";
+
 export default (app: Application) => {
   const router = Router();
 
-  /**  NFT retrieve API from OpenSea */
-  router.get('/', HomeController.index)
+  router.get("/", HomeController.index)
+
+  /** Routes for Authentication */
+  router.post("/signUpWithNumber", authControllers.signUpWithNumber)
+  router.post("/signInWithPassword", authControllers.signInWithPassword)
+  router.post("/signInWithJWT", authControllers.signInWithJWT)
 
   app.use("/", router);
 }
