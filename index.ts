@@ -11,7 +11,7 @@ dotenv.config();
 const port = process.env.PORT || 3000;
 
 const app: Express = express();
-mongoose.connect(process.env.DB_URI || "mogoose://localhost:27017/prescription_db");
+mongoose.connect(process.env.DB_URI || "mongodb://localhost:27017/prescription_db");
 
 /** App configuration */
 app.use(bodyParser.json());

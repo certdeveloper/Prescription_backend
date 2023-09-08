@@ -91,7 +91,7 @@ const signInWithPassword = async (req: Request, res: Response) => {
     
     } else {
      
-      const token = await generateJWT({
+      const token = generateJWT({
         phoneNumber: user.phoneNumber,
         name: user.name,
         _id: user._id.toString(),
@@ -100,7 +100,7 @@ const signInWithPassword = async (req: Request, res: Response) => {
 
       return res.json({
         status: 200,
-        data: token,
+        access_token: token,
       });
 
     }
@@ -113,7 +113,7 @@ const signInWithPassword = async (req: Request, res: Response) => {
   }
 }
 
-const generateJWT = async (userData: UserData) => {
+const generateJWT = (userData: UserData) => {
   const token = jwt.sign({
     phoneNumber: userData.phoneNumber,
     name: userData.name,
@@ -126,7 +126,26 @@ const generateJWT = async (userData: UserData) => {
 }
 
 
+const signInWithJWT = async (req: Request, res: Response) => {
+  try {
+
+      let token = req.headers["authorization"] as unknown as string;
+      const user: UserData = jwt.verify(token, process.env.SECRET_KEY!) as UserData
+
+      token = generateJWT(user)
+      res.cookie('token', token, { httpOnly: true, secure: process.env.MODE === 'production', maxAge: 60 * 60 * 24 * 2, sameSite: 'strict', path: '/' });
+      res.json({ user, access_token: token });
+      return;
+  } catch (error) {
+      res.json({
+          message: 'Token expired',
+          status: 403
+      })
+  }
+}
+
 export default {
   signUpWithNumber,
   signInWithPassword,
+  signInWithJWT,
 }
