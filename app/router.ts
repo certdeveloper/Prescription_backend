@@ -11,6 +11,7 @@ export default (app: Application) => {
   /** Routes for Authentication */
   router.post("/signUpWithNumber", authControllers.signUpWithNumber)
   router.post("/signInWithPassword", authControllers.signInWithPassword)
+  router.post("/signInWithJWT", authControllers.signInWithJWT)
 
   app.use("/", router);
 }
