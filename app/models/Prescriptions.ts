@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
 const PrescriptionSchema = new Schema({
-  useId: {
+  userId: {
     type: ObjectId,
     requried: true,
   },
