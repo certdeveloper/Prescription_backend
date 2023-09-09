@@ -7,3 +7,7 @@ node_modules
 
 #build
 dist
+
+# ingore upload files
+uploads/*
+!uploads/.gitkeep
