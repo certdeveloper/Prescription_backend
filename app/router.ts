@@ -18,6 +18,7 @@ export default (app: Application) => {
   
   /** Routes for Letter header image management */
   router.post("/letterHeadImage/add", authMiddleware.authenticate, storage('letter_head_images').single('file'), profileControllers.addLeadHeadImage)
+  router.get('/letterHeadImage', profileControllers.getletterHeadImage)
   
   app.use("/", router);
 }
