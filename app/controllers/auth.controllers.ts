@@ -80,7 +80,7 @@ const signInWithPassword = async (req: Request, res: Response) => {
 
     if (
       !user
-      || (await bcrypt.compare(password, user.password))
+      || !(await bcrypt.compare(password, user.password))
     ) {
 
       return res.json({
@@ -88,9 +88,9 @@ const signInWithPassword = async (req: Request, res: Response) => {
         message: "Invalid Credential!",
         type: "warning",
       });
-    
+
     } else {
-     
+
       const token = generateJWT({
         phoneNumber: user.phoneNumber,
         name: user.name,
@@ -118,29 +118,24 @@ const generateJWT = (userData: UserData) => {
     phoneNumber: userData.phoneNumber,
     name: userData.name,
     password: userData.password,
-  }, process.env.SECRET_KEY!, {
-    expiresIn: "2 days"
-  })
+  }, process.env.SECRET_KEY!)
 
   return token;
 }
 
-
 const signInWithJWT = async (req: Request, res: Response) => {
   try {
+    let token = req.headers["authorization"] as unknown as string;
+    const user: UserData = jwt.verify(token, process.env.SECRET_KEY!) as UserData
 
-      let token = req.headers["authorization"] as unknown as string;
-      const user: UserData = jwt.verify(token, process.env.SECRET_KEY!) as UserData
-
-      token = generateJWT(user)
-      res.cookie('token', token, { httpOnly: true, secure: process.env.MODE === 'production', maxAge: 60 * 60 * 24 * 2, sameSite: 'strict', path: '/' });
-      res.json({ user, access_token: token });
-      return;
+    token = generateJWT(user)
+    res.json({ user, access_token: token });
+    return;
   } catch (error) {
-      res.json({
-          message: 'Token expired',
-          status: 403
-      })
+    res.json({
+      message: 'Not authorized',
+      status: 403
+    })
   }
 }
 
