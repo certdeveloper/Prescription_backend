@@ -1,13 +1,12 @@
 import { Request, Response } from "express";
 import HeadImage from "../models/HeadImages";
 import { ObjectId } from "mongodb";
-import path from "path";
 
 const addLeadHeadImage = (req: AuthenticatedRequest, res: Response) => {
   try {
     const user = req.user!;
     const { name } = req.body;
-    if (!name || !req.file) {
+    if (!req.file) {
       return res.json({
         status: 400,
         message: "Bad request!"
@@ -36,7 +35,7 @@ const addLeadHeadImage = (req: AuthenticatedRequest, res: Response) => {
   }
 }
 
-const getletterHeadImage = async (req: Request, res: Response) => {
+const getLetterHeadImage = async (req: Request, res: Response) => {
   try {
     const { imageId } = req.query;
 
@@ -52,7 +51,7 @@ const getletterHeadImage = async (req: Request, res: Response) => {
       const url = headImage.url;
       console.log(url, 'path')
       console.log(process.cwd())
-      res.sendFile(process.cwd() + '/' +url);
+      res.sendFile(process.cwd() + '/' + url);
 
     } else {
       return res.json({
@@ -70,7 +69,35 @@ const getletterHeadImage = async (req: Request, res: Response) => {
 
 }
 
+const updateLetterHeadImage = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user?._id;
+    if (!req.file) {
+      return res.json({
+        status: 400,
+        message: "Bad request",
+      })
+    }
+    const url = req.file?.destination + "/" + req.file?.filename;
+    const name = req.body.name;
+
+    await HeadImage.updateOne({ userId: userId }, { url: url, name });
+
+    return res.json({
+      status: 200,
+      message: "Success!",
+    })
+  } catch (error) {
+    console.log(error);
+    return res.json({
+      status: 500,
+      message: "Server Error"
+    })
+  }
+}
+
 export default {
   addLeadHeadImage,
-  getletterHeadImage
+  getLetterHeadImage,
+  updateLetterHeadImage
 }
